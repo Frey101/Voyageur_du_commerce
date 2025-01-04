@@ -94,48 +94,141 @@ void Recherche_ItineraireIteratif(int cord[8][3], float distances[8][8])
     }
 }
 
-// Supression des chiffres autour des 'X' :
-void Itineraire_Vierge(char map[49][19], int cord[8][3])
+void Recursif(int n, int a[8], int cord[8][3], float *min, float somme, float distances[8][8], int visited[8])
 {
-    for (int a = 0; a <= 7; a++)
+    if (n == 8) // Si tous les points ont été choisis
     {
-        map[cord[a][0]][cord[a][1]] = 'X'; // Remise du point sur la position initiale.
+        somme = 0;
+        for (int i = 0; i < 7; i++)
+        {
+            somme += distances[a[i]][a[i + 1]]; // Ajoute les distances entre les points
+        }
+        somme += distance(cord[a[0]][0], cord[a[0]][1], 0, 0); // Distance du départ
+        somme += distance(cord[a[7]][0], cord[a[7]][1], 0, 0); // Retour au départ
+
+        if (somme < *min) // Si la somme est inférieure au minimum
+        {
+            *min = somme;
+            for (int i = 0; i < 8; i++)
+            {
+                cord[i][2] = a[i]; // Met à jour les coordonnées
+            }
+        }
+        return;
+    }
+
+    // Exploration des permutations
+    for (int i = 0; i < 8; i++)
+    {
+        if (!visited[i]) // Si le point n'a pas encore été visité
+        {
+            visited[i] = 1;
+            a[n] = i;
+            Recursif(n + 1, a, cord, min, somme, distances, visited);
+            visited[i] = 0; // Réinitialisation du point pour les autres permutations
+        }
     }
 }
 
-// Ecriture de l'itinéraire sur la map en faisant attention à ne pas écraser de bordure, de chiffre ou de 'X' :
+// Lancement de la recherche de façon récursive :
+void Recherche_Itineraire_Recursif(int cord[8][3], float distances[8][8])
+{
+    int a[8] = {0};       // Tableau pour stocker les indices du chemin
+    int visited[8] = {0}; // Tableau pour marquer les points visités
+    float min = 2000.0f;
+    Recursif(0, a, cord, &min, 0.0f, distances, visited);
+    printf("Distance minimale : %.2f\n", min);
+    printf("Chemin optimal : ");
+    for (int i = 0; i < 8; i++)
+    {
+        printf("%d ", cord[i][2] + 1); // Affiche l'ordre des indices dans le chemin optimal (1 à 8)
+    }
+    printf("\n");
+}
+
+// *-----------------------------------------------------------------------------------------------------------------------------
+// Recherche de l'itinéraire le plus court de façon heuristique (on prend la ville la plus proche à chaque fois) :
+void Recherche_Heuristique(int cord[8][3], float distances[8][8])
+{
+    int visited[8] = {0}; // Tableau pour marquer les villes visitées
+    int current_city = -1;
+    float min_distance;
+    int next_city;
+
+    // Trouver la première ville la plus proche de l'origine (0, 0)
+    min_distance = 2000.0f; // Distance initiale très grande
+    for (int i = 0; i < 8; i++)
+    {
+        float dist = distance(0, 0, cord[i][0], cord[i][1]);
+        if (dist < min_distance)
+        {
+            min_distance = dist;
+            current_city = i;
+        }
+    }
+
+    visited[current_city] = 1; // Marquer la première ville comme visitée
+    cord[current_city][2] = 1; // Première ville dans l'itinéraire
+
+    // Trouver les autres villes dans l'ordre heuristique
+    for (int step = 2; step <= 8; step++)
+    {
+        min_distance = 2000.0f;
+        next_city = -1;
+
+        // Trouver la ville non visitée la plus proche de la ville actuelle
+        for (int i = 0; i < 8; i++)
+        {
+            if (!visited[i] && distances[current_city][i] < min_distance)
+            {
+                min_distance = distances[current_city][i];
+                next_city = i;
+            }
+        }
+
+        if (next_city != -1)
+        {
+            visited[next_city] = 1;    // Marquer la ville comme visitée
+            cord[next_city][2] = step; // Définir son ordre dans l'itinéraire
+            current_city = next_city;  // Passer à la ville suivante
+        }
+    }
+}
+
+void Nettoyer_Carte(char map[49][19])
+{
+    for (int y = 1; y < 18; y++)
+    {
+        for (int x = 1; x < 48; x++)
+        {
+            if (map[x][y] >= '1' && map[x][y] <= '8')
+            {
+                map[x][y] = ' '; // Remplace les chiffres par des espaces
+            }
+        }
+    }
+}
 void Ecriture_Itineraire(char map[49][19], int cord[8][3])
 {
-    Itineraire_Vierge(map, cord); // Effacer l'itinéraire précédent
+    Nettoyer_Carte(map); // Supprime les anciens numéros
 
-    // Placer les chiffres de 1 à 8 à côté des 'X'
-    for (int a = 0; a < 8; a++) // Commence à 0 et termine à 7, soit 8 itérations
+    for (int a = 0; a < 8; a++)
     {
         int x = cord[a][0];
         int y = cord[a][1];
-        char digit = '1' + a; // Convertir l'index en caractère ASCII, de '1' à '8'
+        char digit = '1' + cord[a][2] - 1; // Convertit l'ordre en caractère
 
-        // Vérifier les cases autour du 'X' pour placer le chiffre
+        // Place le chiffre autour de 'X' sans écraser les bordures ou 'X'
         if (map[x + 1][y] == ' ')
-        {
-            map[x + 1][y] = digit; // Placer à droite
-        }
+            map[x + 1][y] = digit; // À droite
         else if (map[x - 1][y] == ' ')
-        {
-            map[x - 1][y] = digit; // Placer à gauche
-        }
+            map[x - 1][y] = digit; // À gauche
         else if (map[x][y + 1] == ' ')
-        {
-            map[x][y + 1] = digit; // Placer en bas
-        }
+            map[x][y + 1] = digit; // En bas
         else if (map[x][y - 1] == ' ')
-        {
-            map[x][y - 1] = digit; // Placer en haut
-        }
+            map[x][y - 1] = digit; // En haut
         else
-        {
-            map[x][y] = digit; // Si aucune place n'est trouvée, écraser 'X'
-        }
+            map[x][y] = digit; // Si aucune place, écrase le 'X'
     }
 }
 
@@ -239,9 +332,32 @@ int main()
     // Affichage(map);
     // printf("\n");
 
+    // chemin iteratif
     Recherche_ItineraireIteratif(cord, distances);
     Ecriture_Itineraire(map, cord);
     printf("Itineraire en version ITERATIVE :\n");
+    Affichage(map);
+    printf("\n");
+
+    // chemin recursif
+    Recherche_Itineraire_Recursif(cord, distances);
+    Ecriture_Itineraire(map, cord);
+    printf("Itineraire en version RECURSIVE :\n");
+    Affichage(map);
+    printf("\n");
+
+    // chemin Heuristique
+    // Recherche_Heuristique(cord, distances);
+
+    // printf("Itineraire en version Heuristique :\n");
+    // Affichage(map);
+    // printf("\n");
+
+    // Après avoir effectué la recherche heuristique
+    Recherche_Heuristique(cord, distances); // Utilisation de l'algorithme heuristique
+    Ecriture_Itineraire(map, cord);
+    // Afficher la carte mise à jour avec l'itinéraire heuristique
+    printf("Itineraire en version HEURISTIQUE :\n");
     Affichage(map);
     printf("\n");
 
