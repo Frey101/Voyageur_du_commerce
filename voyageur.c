@@ -24,50 +24,54 @@ double distance(int x1, int y1, int x2, int y2)
     return sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2));
 }
 
-// Recherche de l'itinéraire le plus court selon des calculs exhaustifs
 void Recherche_ItineraireIteratif(int cord[8][3], float distances[8][8])
 {
-    float min = 2000, somme;
-    int c1, c2, c3, c4, c5, c6, c7, c8;
+    float min = 2000, somme;            // Initialise une distance minimale
+    int c1, c2, c3, c4, c5, c6, c7, c8; // Indices des points du chemin
 
+    // Boucles imbriquées pour parcourir toutes les permutations possibles des 8 villes
     for (c1 = 0; c1 < 8; c1++)
-    {
+    { // Premier point
         for (c2 = 0; c2 < 8; c2++)
-        {
+        { // Deuxième point
             if (c2 != c1)
-            {
+            { // S'assurer que c2 est différent de c1
                 for (c3 = 0; c3 < 8; c3++)
-                {
+                { // Troisième point
                     if (c3 != c1 && c3 != c2)
-                    {
+                    { // Vérifie que c3 est différent de c1 et c2
                         for (c4 = 0; c4 < 8; c4++)
-                        {
+                        { // Quatrième point
                             if (c4 != c1 && c4 != c2 && c4 != c3)
                             {
                                 for (c5 = 0; c5 < 8; c5++)
-                                {
+                                { // Cinquième point
                                     if (c5 != c1 && c5 != c2 && c5 != c3 && c5 != c4)
                                     {
                                         for (c6 = 0; c6 < 8; c6++)
-                                        {
+                                        { // Sixième point
                                             if (c6 != c1 && c6 != c2 && c6 != c3 && c6 != c4 && c6 != c5)
                                             {
                                                 for (c7 = 0; c7 < 8; c7++)
-                                                {
+                                                { // Septième point
                                                     if (c7 != c1 && c7 != c2 && c7 != c3 && c7 != c4 && c7 != c5 && c7 != c6)
                                                     {
                                                         for (c8 = 0; c8 < 8; c8++)
-                                                        {
+                                                        { // Huitième point
                                                             if (c8 != c1 && c8 != c2 && c8 != c3 && c8 != c4 && c8 != c5 && c8 != c6 && c8 != c7)
                                                             {
-                                                                somme = distance(0, 0, cord[c1][0], cord[c1][1]) +
-                                                                        distances[c1][c2] + distances[c2][c3] +
+                                                                // Calcule la distance totale de l'itinéraire
+                                                                somme = distance(0, 0, cord[c1][0], cord[c1][1]) + // Distance départ -> c1
+                                                                        distances[c1][c2] + distances[c2][c3] +    // Distances entre les points
                                                                         distances[c3][c4] + distances[c4][c5] +
                                                                         distances[c5][c6] + distances[c6][c7] +
-                                                                        distances[c7][c8] + distance(cord[c8][0], cord[c8][1], 0, 0);
+                                                                        distances[c7][c8] +                       // Distance c7 -> c8
+                                                                        distance(cord[c8][0], cord[c8][1], 0, 0); // Distance c8 -> retour au départ
+
                                                                 if (somme < min)
-                                                                {
-                                                                    min = somme;
+                                                                {                // Si la distance totale est inférieure au minimum actuel
+                                                                    min = somme; // Met à jour la distance minimale
+                                                                    // Met à jour l'ordre des points pour représenter le chemin optimal
                                                                     cord[0][2] = c1;
                                                                     cord[1][2] = c2;
                                                                     cord[2][2] = c3;
@@ -94,38 +98,39 @@ void Recherche_ItineraireIteratif(int cord[8][3], float distances[8][8])
     }
 }
 
+// -----------------------------------------------------------------------------------------------------------------
 void Recursif(int n, int a[8], int cord[8][3], float *min, float somme, float distances[8][8], int visited[8])
 {
-    if (n == 8) // Si tous les points ont été choisis
-    {
-        somme = 0;
+    if (n == 8)
+    {              // Si tous les points ont été visités
+        somme = 0; // Réinitialise la somme pour calculer la distance totale
         for (int i = 0; i < 7; i++)
         {
-            somme += distances[a[i]][a[i + 1]]; // Ajoute les distances entre les points
+            somme += distances[a[i]][a[i + 1]]; // Ajoute la distance entre chaque point
         }
-        somme += distance(cord[a[0]][0], cord[a[0]][1], 0, 0); // Distance du départ
-        somme += distance(cord[a[7]][0], cord[a[7]][1], 0, 0); // Retour au départ
+        somme += distance(cord[a[0]][0], cord[a[0]][1], 0, 0); // Ajoute la distance du départ au premier point
+        somme += distance(cord[a[7]][0], cord[a[7]][1], 0, 0); // Ajoute la distance du dernier point au retour
 
-        if (somme < *min) // Si la somme est inférieure au minimum
-        {
-            *min = somme;
+        if (somme < *min)
+        {                 // Si la distance totale est inférieure au minimum actuel
+            *min = somme; // Met à jour la distance minimale
             for (int i = 0; i < 8; i++)
             {
-                cord[i][2] = a[i]; // Met à jour les coordonnées
+                cord[i][2] = a[i]; // Enregistre le chemin
             }
         }
         return;
     }
 
-    // Exploration des permutations
+    // Explore toutes les permutations possibles
     for (int i = 0; i < 8; i++)
     {
-        if (!visited[i]) // Si le point n'a pas encore été visité
-        {
-            visited[i] = 1;
-            a[n] = i;
-            Recursif(n + 1, a, cord, min, somme, distances, visited);
-            visited[i] = 0; // Réinitialisation du point pour les autres permutations
+        if (!visited[i])
+        {                                                             // Si le point i n'a pas encore été visité
+            visited[i] = 1;                                           // Marque le point comme visité
+            a[n] = i;                                                 // Ajoute ce point à la permutation actuelle
+            Recursif(n + 1, a, cord, min, somme, distances, visited); // Appelle récursivement pour le prochain point
+            visited[i] = 0;                                           // Réinitialise le point pour permettre d'autres permutations
         }
     }
 }
@@ -135,19 +140,15 @@ void Recherche_Itineraire_Recursif(int cord[8][3], float distances[8][8])
 {
     int a[8] = {0};       // Tableau pour stocker les indices du chemin
     int visited[8] = {0}; // Tableau pour marquer les points visités
-    float min = 2000.0f;
-    Recursif(0, a, cord, &min, 0.0f, distances, visited);
-    printf("Distance minimale : %.2f\n", min);
-    printf("Chemin optimal : ");
-    for (int i = 0; i < 8; i++)
-    {
-        printf("%d ", cord[i][2] + 1); // Affiche l'ordre des indices dans le chemin optimal (1 à 8)
-    }
+    float min = 2000.0f;  // Distance minimale initiale
+
+    Recursif(0, a, cord, &min, 0.0f, distances, visited); // Appelle la fonction récursive pour trouver le meilleure l'itinéraire
+
     printf("\n");
 }
 
 // *-----------------------------------------------------------------------------------------------------------------------------
-// Recherche de l'itinéraire le plus court de façon heuristique (on prend la ville la plus proche à chaque fois) :
+// Recherche de l'itinéraire le plus court de façon heuristique (on prend la ville la plus proche à chaque fois)
 void Recherche_Heuristique(int cord[8][3], float distances[8][8])
 {
     int visited[8] = {0}; // Tableau pour marquer les villes visitées
@@ -156,7 +157,7 @@ void Recherche_Heuristique(int cord[8][3], float distances[8][8])
     int next_city;
 
     // Trouver la première ville la plus proche de l'origine (0, 0)
-    min_distance = 2000.0f; // Distance initiale très grande
+    min_distance = 2000.0f; // Distance initiale
     for (int i = 0; i < 8; i++)
     {
         float dist = distance(0, 0, cord[i][0], cord[i][1]);
@@ -195,40 +196,43 @@ void Recherche_Heuristique(int cord[8][3], float distances[8][8])
     }
 }
 
+// ---------------------------------------------------------------------------------------------------------------------------------
+
 void Nettoyer_Carte(char map[49][19])
 {
-    for (int y = 1; y < 18; y++)
+    for (int y = 1; y < 18; y++) // Parcourt chaque ligne
     {
-        for (int x = 1; x < 48; x++)
+        for (int x = 1; x < 48; x++) // Parcourt chaque colonne
         {
-            if (map[x][y] >= '1' && map[x][y] <= '8')
+            if (map[x][y] >= '0' && map[x][y] <= '8') // Si le caractère est un chiffre
             {
-                map[x][y] = ' '; // Remplace les chiffres par des espaces
+                map[x][y] = ' '; // Le remplace par un espace vide
             }
         }
     }
 }
+// ----------------------------------------------------------------------------------------------------------------------------
 void Ecriture_Itineraire(char map[49][19], int cord[8][3])
 {
-    Nettoyer_Carte(map); // Supprime les anciens numéros
+    Nettoyer_Carte(map); // Supprime les anciens numéros de la carte
 
-    for (int a = 0; a < 8; a++)
+    for (int a = 0; a < 8; a++) // Parcourt les 8 villes
     {
-        int x = cord[a][0];
-        int y = cord[a][1];
-        char digit = '1' + cord[a][2] - 1; // Convertit l'ordre en caractère
+        int x = cord[a][0];                // Coordonnée x de la ville a
+        int y = cord[a][1];                // Coordonnée y de la ville a
+        char digit = '1' + cord[a][2] - 1; // Convertit l'ordre de la ville en un caractère
 
-        // Place le chiffre autour de 'X' sans écraser les bordures ou 'X'
-        if (map[x + 1][y] == ' ')
-            map[x + 1][y] = digit; // À droite
-        else if (map[x - 1][y] == ' ')
-            map[x - 1][y] = digit; // À gauche
-        else if (map[x][y + 1] == ' ')
-            map[x][y + 1] = digit; // En bas
-        else if (map[x][y - 1] == ' ')
-            map[x][y - 1] = digit; // En haut
+        // Place le numéro a cote du caractere 'X'
+        if (map[x + 1][y] == ' ')      // Si l'espace à droite de 'X' est vide
+            map[x + 1][y] = digit;     // Place le numéro ici
+        else if (map[x - 1][y] == ' ') // Si l'espace à gauche de 'X' est vide
+            map[x - 1][y] = digit;     // Place le numéro ici
+        else if (map[x][y + 1] == ' ') // Si l'espace en bas de 'X' est vide
+            map[x][y + 1] = digit;     // Place le numéro ici
+        else if (map[x][y - 1] == ' ') // Si l'espace en haut de 'X' est vide
+            map[x][y - 1] = digit;     // Place le numéro ici
         else
-            map[x][y] = digit; // Si aucune place, écrase le 'X'
+            map[x][y] = digit; // Si tous les espaces autour sont occupés, écrase 'X' avec le numéro
     }
 }
 
@@ -328,10 +332,6 @@ int main()
     Affichage(map);
     printf("\n");
 
-    // printf("Map chemin le plus court (iteratif)\n");
-    // Affichage(map);
-    // printf("\n");
-
     // chemin iteratif
     Recherche_ItineraireIteratif(cord, distances);
     Ecriture_Itineraire(map, cord);
@@ -345,13 +345,6 @@ int main()
     printf("Itineraire en version RECURSIVE :\n");
     Affichage(map);
     printf("\n");
-
-    // chemin Heuristique
-    // Recherche_Heuristique(cord, distances);
-
-    // printf("Itineraire en version Heuristique :\n");
-    // Affichage(map);
-    // printf("\n");
 
     // Après avoir effectué la recherche heuristique
     Recherche_Heuristique(cord, distances); // Utilisation de l'algorithme heuristique
