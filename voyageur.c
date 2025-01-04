@@ -4,6 +4,8 @@
 #include <time.h>
 #include <math.h>
 #include <stdbool.h>
+// gcc Voyage_com.c -o voy
+// ./voy
 
 // Affichage de la map
 void Affichage(char map[49][19])
